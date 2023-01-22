@@ -21,7 +21,7 @@ export const redisModule = RedisModule.registerAsync({
 
         client.on('connect', () => {
           logger.log(
-            `Conencted to redis on ${client.options.host}:${client.options.port}`,
+            `Connected to redis on ${client.options.host}:${client.options.port}`,
           );
         });
       },
