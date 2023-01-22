@@ -104,7 +104,6 @@ export class PollsRepository {
       await this.redisClient.send_command(
         'JSON.SET',
         key,
-        '.',
         participantPath,
         JSON.stringify(name),
       );
