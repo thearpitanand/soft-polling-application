@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
+  AddNominationFields,
   AddParticipantFields,
   CreatePollFields,
   JoinPollFields,
   RejoinPollFields,
 } from './types';
-import { createPollID, createUserID } from '../utils/ids';
+import { createPollID, createUserID, createNominationID } from '../utils/ids';
 import { PollsRepository } from './polls.repository';
 import { JwtService } from '@nestjs/jwt';
 import { Poll } from 'shared';
@@ -110,5 +111,24 @@ export class PollsService {
       );
       return updatedPoll;
     }
+  }
+
+  async addNomination({
+    pollID,
+    userID,
+    text,
+  }: AddNominationFields): Promise<Poll> {
+    return this.pollsRepository.addNomination({
+      pollID,
+      nominationID: createNominationID(),
+      nomination: {
+        userID,
+        text,
+      },
+    });
+  }
+
+  async removeNomination(pollID: string, nominationID: string): Promise<Poll> {
+    return this.pollsRepository.removeNomination(pollID, nominationID);
   }
 }
