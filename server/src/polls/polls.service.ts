@@ -19,10 +19,7 @@ export class PollsService {
   private readonly logger = new Logger(PollsService.name);
 
   async getPoll(pollID: string) {
-    const poll = await this.pollsRepository.getPoll(pollID);
-    return {
-      poll,
-    };
+    return await this.pollsRepository.getPoll(pollID);
   }
 
   async create(fields: CreatePollFields) {
