@@ -15,6 +15,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { Namespace } from 'socket.io';
+import { SocketEvents } from 'src/enums/socket-event.enum';
 import { WsCatchAllFilter } from 'src/exceptions/ws-catch-all-filter';
 import { WsBadRequestException } from 'src/exceptions/ws-exceptions';
 import { PollsService } from './polls.service';
@@ -38,7 +39,7 @@ export class PollsGateway
     this.logger.log(`Websoket Gateway initialized`);
   }
 
-  handleConnection(client: SocketWithAuth) {
+  async handleConnection(client: SocketWithAuth) {
     const socket = this.io.sockets;
 
     this.logger.debug(
@@ -48,16 +49,48 @@ export class PollsGateway
     this.logger.log(`Web Socket Client with id: ${client.id} connected!`);
     this.logger.debug(`Number of connected web sockets: ${socket.size}`);
 
-    this.io.emit('hello', `Hello from ${client.id}`);
+    const roomName = client.pollID;
+    await client.join(roomName);
+    const connectedClients = this.io.adapter.rooms?.get(roomName)?.size ?? 0;
+
+    this.logger.debug(
+      `userID: ${client.userID} joined room with name: ${roomName}`,
+    );
+    this.logger.debug(
+      `Total clients connected to room '${roomName}': ${connectedClients}`,
+    );
+
+    const updatedPoll = await this.pollsService.addParticipant({
+      pollID: client.pollID,
+      userID: client.userID,
+      name: client.name,
+    });
+
+    this.io.to(roomName).emit(SocketEvents.POLL_UPDATED, updatedPoll);
   }
 
-  handleDisconnect(client: SocketWithAuth) {
+  async handleDisconnect(client: SocketWithAuth) {
     const socket = this.io.sockets;
+
+    const { pollID, userID } = client;
+
+    const updatedPoll = await this.pollsService.removeParticipant(
+      pollID,
+      userID,
+    );
+
+    const roomName = client.pollID;
+    const clientCount = this.io.adapter.rooms?.get(roomName)?.size ?? 0;
 
     this.logger.log(`Web Socket Client with id: ${client.id} disconnected!`);
     this.logger.debug(`Number of connected web sockets: ${socket.size}`);
+    this.logger.debug(
+      `Total clients connected to room '${roomName}': ${clientCount}`,
+    );
 
-    this.io.emit('goodbye', `goodbye from ${client.id}`);
+    if (updatedPoll) {
+      this.io.to(pollID).emit(SocketEvents.POLL_UPDATED, updatedPoll);
+    }
   }
 
   @SubscribeMessage('test')
