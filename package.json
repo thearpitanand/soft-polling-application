@@ -5,7 +5,8 @@
   "main": "index.js",
   "workspaces": [
     "client",
-    "server"
+    "server",
+    "shared"
   ],
   "scripts": {
     "docker:compose": "docker-compose up -d",
@@ -26,7 +27,7 @@
     "nestjs",
     "socketjs"
   ],
-  "author": "Jacob Goodwin",
+  "author": "Arpit Anand",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/thearpitanand/soft-polling-application/issues"
